@@ -23,5 +23,8 @@ namespace HarmanKnowledgeHubPortal.Domain.Entities
 
         public bool IsDeleted { get; set; }
 
+        public ICollection<Article> Articles { get; set; } = new List<Article>();
+
+
     }
 }

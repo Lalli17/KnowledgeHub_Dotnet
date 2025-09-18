@@ -18,28 +18,45 @@ namespace HarmanKnowledgeHubPortal.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Tag> Tags { get; set; }
         //public DbSet<Report> Reports { get; set; }
-        
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Unique Email for Users
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
+            // User ↔ Role many-to-many (skip navigation is fine here)
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Roles)
-                .WithMany(); // Can make a join table if needed
+                .WithMany();
 
-            modelBuilder.Entity<Article>()
-                .HasMany(a => a.ArticleTags)
-                .WithMany(); // Many-to-Many Tags
+            // Article ↔ ArticleTag ↔ Tag many-to-many (explicit join)
+            modelBuilder.Entity<ArticleTag>()
+                .HasKey(at => new { at.ArticleId, at.TagId });
 
+            modelBuilder.Entity<ArticleTag>()
+                .HasOne(at => at.Article)
+                .WithMany(a => a.ArticleTags)
+                .HasForeignKey(at => at.ArticleId);
+
+            modelBuilder.Entity<ArticleTag>()
+                .HasOne(at => at.Tag)
+                .WithMany(t => t.ArticleTags)
+                .HasForeignKey(at => at.TagId);
+
+            // Article ↔ Category (1-to-many)
             modelBuilder.Entity<Article>()
                 .HasOne(a => a.Category)
-                .WithMany(); // 1 Category -> many Articles
+                .WithMany(c => c.Articles) // make sure Category has ICollection<Article>
+                .HasForeignKey(a => a.CategoryId);
 
+            // Soft delete filter on Category
             modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
+
             base.OnModelCreating(modelBuilder);
         }
+
     }
 }
