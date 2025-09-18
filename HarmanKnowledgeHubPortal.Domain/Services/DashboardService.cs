@@ -21,15 +21,15 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             var dashboard = await _dashboardRepository.GetDashboardAsync();
 
             // The code below that sends an email is now safely disabled.
-            if (dashboard.TopPublishersThisMonth.Any())
-            {
-                var topPublisher = dashboard.TopPublishersThisMonth.First();
-                await _notificationService.SendEmailAsync(
-                    "publisher@example.com",
-                    "Top Publisher Award",
-                    $"Congratulations {topPublisher.PublisherName}! You are the top publisher this month with {topPublisher.ArticlesCount} articles."
-                );
-            }
+            //if (dashboard.TopPublishersThisMonth.Any())
+            //{
+            //    var topPublisher = dashboard.TopPublishersThisMonth.First();
+            //    await _notificationService.SendEmailAsync(
+            //        "publisher@example.com",
+            //        "Top Publisher Award",
+            //        $"Congratulations {topPublisher.PublisherName}! You are the top publisher this month with {topPublisher.ArticlesCount} articles."
+            //    );
+            //}
 
             return dashboard;
         }

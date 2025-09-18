@@ -8,7 +8,7 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers.CategoryController
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
