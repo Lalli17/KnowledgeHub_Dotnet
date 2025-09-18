@@ -16,13 +16,18 @@ namespace HarmanKnowledgeHubPortal
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // ✅ Register all YOUR modules
+            // Register all application services and repositories
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
-            builder.Services.AddScoped<IDashboardService, DashboardService>();
-            builder.Services.AddScoped<IArticleService, ArticleService>();
-            builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IArticlesRepository, ArticlesRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<IArticleService, ArticleService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
             // Register DbContext with a connection string
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -31,12 +36,15 @@ namespace HarmanKnowledgeHubPortal
 
             var app = builder.Build();
 
-            // Swagger
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            });
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Knowledge Hub API V1");
+                });
+            }
 
             app.UseHttpsRedirection();
             app.UseAuthorization();

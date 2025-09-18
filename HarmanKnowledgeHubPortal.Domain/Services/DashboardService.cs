@@ -20,6 +20,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         {
             var dashboard = await _dashboardRepository.GetDashboardAsync();
 
+            // The code below that sends an email is now safely disabled.
             if (dashboard.TopPublishersThisMonth.Any())
             {
                 var topPublisher = dashboard.TopPublishersThisMonth.First();

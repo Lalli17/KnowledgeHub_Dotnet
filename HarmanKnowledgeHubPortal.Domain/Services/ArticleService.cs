@@ -1,6 +1,6 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
+using HarmanKnowledgeHubPortal.Domain.Entities;
 using HarmanKnowledgeHubPortal.Domain.Repositories;
-using HarmanKnowledgeHubPortal.Domain.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,16 +11,13 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
     public class ArticleService : IArticleService
     {
         private readonly IArticlesRepository _articleRepo;
-        private readonly ICategoryRepository _categoryRepo;
         private readonly INotificationService _notificationService;
 
         public ArticleService(
             IArticlesRepository articleRepo,
-            ICategoryRepository categoryRepo,
             INotificationService notificationService)
         {
             _articleRepo = articleRepo;
-            _categoryRepo = categoryRepo;
             _notificationService = notificationService;
         }
 
@@ -33,22 +30,14 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             if (action == "approve")
             {
                 await _articleRepo.ApproveAsync(dto.ArticleIds);
-
-                await _notificationService.SendEmailAsync(
-                    "publisher@example.com",
-                    "Article Approved",
-                    "Your article has been approved."
-                );
+                // The line below is now safely disabled
+                // await _notificationService.SendEmailAsync("publisher@example.com", "Article Approved", "Your article has been approved.");
             }
             else if (action == "reject")
             {
                 await _articleRepo.RejectAsync(dto.ArticleIds);
-
-                await _notificationService.SendEmailAsync(
-                    "publisher@example.com",
-                    "Article Rejected",
-                    "Your article has been rejected."
-                );
+                // The line below is now safely disabled
+                // await _notificationService.SendEmailAsync("publisher@example.com", "Article Rejected", "Your article has been rejected.");
             }
             else
             {
@@ -59,16 +48,6 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         public async Task<List<ReviewArticleDto>> GetPendingArticlesAsync(int categoryId)
         {
             var articles = await _articleRepo.ReviewAsync(categoryId);
-
-            foreach (var article in articles)
-            {
-                await _notificationService.SendEmailAsync(
-                    "publisher@example.com",
-                    "Article Pending Review",
-                    $"Your article '{article.Title}' is pending review."
-                );
-            }
-
             return articles.Select(article => new ReviewArticleDto
             {
                 ArticleIds = new List<int> { article.Id },
@@ -76,14 +55,29 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             }).ToList();
         }
 
-        public async Task SubmitArticleAsync(int articleId)
+        public async Task SubmitArticleAsync(SubmitUrlDTO dto)
         {
-            // (Optional: call repository here if needed)
-            await _notificationService.SendEmailAsync(
-                "publisher@example.com",
-                "Article Submitted",
-                "Your article has been submitted successfully."
-            );
+            var userName = "User"; // Placeholder
+
+            var article = new Article
+            {
+                Title = dto.Title,
+                Url = dto.Url,
+                Description = dto.Description,
+                CategoryId = dto.CategoryId,
+                PostedBy = userName,
+                DateSubmitted = DateTime.UtcNow,
+                Status = ArticleStatus.PENDING
+            };
+
+            await _articleRepo.SubmitAsync(article);
+            // This line is already safely disabled from our previous fix
+            // await _notificationService.SendEmailAsync("admin@example.com", "New Article Submitted", $"A new article '{article.Title}' has been submitted.");
+        }
+
+        public async Task<List<Article>> BrowseArticlesAsync()
+        {
+            return await _articleRepo.BrowseAsync(0, "");
         }
     }
 }
