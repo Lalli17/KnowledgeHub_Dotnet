@@ -16,6 +16,18 @@ namespace HarmanKnowledgeHubPortal
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // ✅ Add CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigins", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                       //"http://localhost:4200"  // Angular local dev                 
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                });
+            });
+
             // Register all application services and repositories
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
             builder.Services.AddScoped<IArticlesRepository, ArticlesRepository>();
@@ -47,6 +59,10 @@ namespace HarmanKnowledgeHubPortal
             }
 
             app.UseHttpsRedirection();
+
+            // ✅ Apply CORS before auth & endpoints
+            app.UseCors("AllowSpecificOrigins");
+
             app.UseAuthorization();
             app.MapControllers();
             app.Run();
