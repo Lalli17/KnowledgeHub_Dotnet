@@ -21,10 +21,10 @@ namespace HarmanKnowledgeHubPortal
             {
                 options.AddPolicy("AllowSpecificOrigins", policy =>
                 {
-                    policy.AllowAnyOrigin()
-                       //"http://localhost:4200"  // Angular local dev                 
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
             });
 
