@@ -45,13 +45,16 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             }
         }
 
-        public async Task<List<ReviewArticleDto>> GetPendingArticlesAsync(int? categoryId)
+        public async Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId)
         {
             var articles = await _articleRepo.ReviewAsync(null);
-            return articles.Select(article => new ReviewArticleDto
+            return articles.Select(a => new PendingArticleDto
             {
-                ArticleIds = new List<int> { article.Id },
-                Action = "Pending"
+                ArticleIds = new[] { a.Id },
+                Title = a.Title,
+                Url = a.Url,
+                CategoryName = a.Category?.CategoryName ?? "Uncategorized",
+                DateSubmitted = a.DateSubmitted
             }).ToList();
         }
 

@@ -8,7 +8,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
     public interface IArticleService
     {
         Task ReviewArticlesAsync(ReviewArticleDto dto);
-        Task<List<ReviewArticleDto>> GetPendingArticlesAsync(int? categoryId);
+        Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId);
         Task SubmitArticleAsync(SubmitUrlDTO dto);
         Task<List<Article>> BrowseArticlesAsync();
     }
