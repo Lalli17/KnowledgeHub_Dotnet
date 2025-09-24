@@ -82,8 +82,7 @@ namespace HarmanKnowledgeHubPortal.Data
         {
             return await _context.Articles
                 .Include(a => a.Category)
-                .Where(a => a.Status == ArticleStatus.PENDING &&
-                            a.Category.Id == categoryId)
+                .Where(a => a.Status == ArticleStatus.PENDING)
                 .ToListAsync();
         }
     }

@@ -47,7 +47,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
 
         public async Task<List<ReviewArticleDto>> GetPendingArticlesAsync(int? categoryId)
         {
-            var articles = await _articleRepo.ReviewAsync(categoryId);
+            var articles = await _articleRepo.ReviewAsync(null);
             return articles.Select(article => new ReviewArticleDto
             {
                 ArticleIds = new List<int> { article.Id },
