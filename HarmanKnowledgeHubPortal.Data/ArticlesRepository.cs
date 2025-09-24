@@ -78,7 +78,7 @@ namespace HarmanKnowledgeHubPortal.Data
             return await query.ToListAsync();
         }
 
-        public async Task<List<Article>> ReviewAsync(int categoryId)
+        public async Task<List<Article>> ReviewAsync(int? categoryId)
         {
             return await _context.Articles
                 .Include(a => a.Category)

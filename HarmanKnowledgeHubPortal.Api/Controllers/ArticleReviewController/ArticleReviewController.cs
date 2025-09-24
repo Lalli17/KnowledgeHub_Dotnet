@@ -33,7 +33,7 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
         }
 
         [HttpGet("pending")]
-        public async Task<IActionResult> GetPendingArticlesAsync([FromQuery] int categoryId)
+        public async Task<IActionResult> GetPendingArticlesAsync([FromQuery] int? categoryId)
         {
             var articles = await _articleService.GetPendingArticlesAsync(categoryId);
             return Ok(articles);
