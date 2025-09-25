@@ -42,6 +42,12 @@ namespace HarmanKnowledgeHubPortal.Data
                     .Include(u => u.Roles)
                     .FirstOrDefaultAsync(u => u.Id == id);
             }
+
+        public async Task<List<User>> GetAllAsync()
+        {
+            // We include Roles so we can display them on the frontend
+            return await _context.Users.Include(u => u.Roles).ToListAsync();
         }
+    }
     }
 

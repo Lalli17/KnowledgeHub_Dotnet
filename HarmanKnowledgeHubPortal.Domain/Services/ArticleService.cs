@@ -1,9 +1,11 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
 using HarmanKnowledgeHubPortal.Domain.Entities;
 using HarmanKnowledgeHubPortal.Domain.Repositories;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace HarmanKnowledgeHubPortal.Domain.Services
@@ -12,13 +14,16 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
     {
         private readonly IArticlesRepository _articleRepo;
         private readonly INotificationService _notificationService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public ArticleService(
             IArticlesRepository articleRepo,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IHttpContextAccessor httpContextAccessor)
         {
             _articleRepo = articleRepo;
             _notificationService = notificationService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task ReviewArticlesAsync(ReviewArticleDto dto)
@@ -30,14 +35,10 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             if (action == "approve")
             {
                 await _articleRepo.ApproveAsync(dto.ArticleIds);
-                // The line below is now safely disabled
-                // await _notificationService.SendEmailAsync("publisher@example.com", "Article Approved", "Your article has been approved.");
             }
             else if (action == "reject")
             {
                 await _articleRepo.RejectAsync(dto.ArticleIds);
-                // The line below is now safely disabled
-                // await _notificationService.SendEmailAsync("publisher@example.com", "Article Rejected", "Your article has been rejected.");
             }
             else
             {
@@ -60,7 +61,14 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
 
         public async Task SubmitArticleAsync(SubmitUrlDTO dto)
         {
-            var userName = "User"; // Placeholder
+            // Read the user's name from the token's "Name" claim
+            var userName = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                // This will prevent non-logged-in users from submitting
+                throw new Exception("User is not authenticated or token is missing name claim.");
+            }
 
             var article = new Article
             {
@@ -68,14 +76,12 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
                 Url = dto.Url,
                 Description = dto.Description,
                 CategoryId = dto.CategoryId,
-                PostedBy = userName,
+                PostedBy = userName, // Use the real user name from the token
                 DateSubmitted = DateTime.UtcNow,
                 Status = ArticleStatus.PENDING
             };
 
             await _articleRepo.SubmitAsync(article);
-            // This line is already safely disabled from our previous fix
-            // await _notificationService.SendEmailAsync("admin@example.com", "New Article Submitted", $"A new article '{article.Title}' has been submitted.");
         }
 
         public async Task<List<Article>> BrowseArticlesAsync()

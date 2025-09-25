@@ -1,7 +1,10 @@
 ﻿using HarmanKnowledgeHubPortal.Data;
 using HarmanKnowledgeHubPortal.Domain.Repositories;
 using HarmanKnowledgeHubPortal.Domain.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace HarmanKnowledgeHubPortal
 {
@@ -16,7 +19,23 @@ namespace HarmanKnowledgeHubPortal
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // ✅ Add CORS
+            // Configure JWT Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
+            // Add HttpContextAccessor to read user claims from the token
+            builder.Services.AddHttpContextAccessor();
+
+            // Add CORS
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowSpecificOrigins", policy =>
@@ -60,10 +79,13 @@ namespace HarmanKnowledgeHubPortal
 
             app.UseHttpsRedirection();
 
-            // ✅ Apply CORS before auth & endpoints
+            // Apply CORS before auth & endpoints
             app.UseCors("AllowSpecificOrigins");
 
+            // IMPORTANT: Add Authentication BEFORE Authorization
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
             app.Run();
         }
