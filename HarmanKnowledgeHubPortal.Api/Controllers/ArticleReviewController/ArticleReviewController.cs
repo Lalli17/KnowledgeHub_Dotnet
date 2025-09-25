@@ -1,4 +1,5 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
+using HarmanKnowledgeHubPortal.Domain.DTOs;
 using HarmanKnowledgeHubPortal.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -56,28 +57,55 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
             }
         }
 
+        //[HttpGet("browse")]
+        //public async Task<IActionResult> BrowseArticles()
+        //{
+        //    try
+        //    {
+        //        var approvedArticles = await _articleService.BrowseArticlesAsync();
+
+        //        var result = approvedArticles.Select(u => new BrowseUrlDTO
+        //        {
+        //            Title = u.Title,
+        //            Url = u.Url,
+        //            Description = u.Description,
+        //            PostedBy = u.PostedBy,
+        //            CategoryName = u.Category?.CategoryName ?? "Uncategorized",
+        //            AverageRating = u.Ratings.Any() ? u.Ratings.Average(r => r.RatingNumber) : 0.0,
+        //            RatingsCount = u.Ratings.Count,
+        //            Reviews = u.Ratings.Select(r => new RatingDto
+        //            {
+        //                Id = r.Id,
+        //                RatingNumber = r.RatingNumber,
+        //                Review = r.Review,
+        //                UserName = r.User.Name,
+        //                RatedAt = r.RatedAt
+        //            }).ToList()
+        //        });
+
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
+
         [HttpGet("browse")]
         public async Task<IActionResult> BrowseArticles()
         {
             try
             {
-                var approvedArticles = await _articleService.BrowseArticlesAsync();
-
-                var result = approvedArticles.Select(u => new BrowseUrlDTO
-                {
-                    Title = u.Title,
-                    Url = u.Url,
-                    Description = u.Description,
-                    PostedBy = u.PostedBy,
-                    CategoryName = u.Category?.CategoryName ?? "Uncategorized"
-                });
-
-                return Ok(result);
+                var articles = await _articleService.BrowseArticlesAsync();
+                return Ok(articles);
             }
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+
+
     }
 }

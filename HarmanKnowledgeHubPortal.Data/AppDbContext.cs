@@ -18,6 +18,8 @@ namespace HarmanKnowledgeHubPortal.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Tag> Tags { get; set; }
         //public DbSet<Report> Reports { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

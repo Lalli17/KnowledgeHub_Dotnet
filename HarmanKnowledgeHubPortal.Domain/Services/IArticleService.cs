@@ -10,6 +10,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         Task ReviewArticlesAsync(ReviewArticleDto dto);
         Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId);
         Task SubmitArticleAsync(SubmitUrlDTO dto);
-        Task<List<Article>> BrowseArticlesAsync();
+        // Task<List<Article>> BrowseArticlesAsync();
+        Task<List<ArticleDto>> BrowseArticlesAsync();
     }
 }

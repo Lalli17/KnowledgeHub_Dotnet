@@ -16,6 +16,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         private readonly INotificationService _notificationService;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+
         public ArticleService(
             IArticlesRepository articleRepo,
             INotificationService notificationService,
@@ -84,9 +85,30 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             await _articleRepo.SubmitAsync(article);
         }
 
-        public async Task<List<Article>> BrowseArticlesAsync()
+        public async Task<List<ArticleDto>> BrowseArticlesAsync()
         {
-            return await _articleRepo.BrowseAsync(0, "");
+            // Use repository method only
+            var articles = await _articleRepo.BrowseAsync();
+
+            return articles.Select(a => new ArticleDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Url = a.Url,
+                Description = a.Description,
+                PostedBy = a.PostedBy,
+                CategoryName = a.Category?.CategoryName ?? "Uncategorized",
+                AverageRating = a.Ratings.Any() ? a.Ratings.Average(r => r.RatingNumber) : 0,
+                RatingsCount = a.Ratings.Count,
+                Reviews = a.Ratings.Select(r => new ReviewDto
+                {
+                    Id = r.Id,
+                    RatingNumber = r.RatingNumber,
+                    Review = r.Review,
+                    Name = r.User?.Name ?? "Unknown",
+                    RatedAt = r.RatedAt
+                }).ToList()
+            }).ToList();
         }
     }
 }
