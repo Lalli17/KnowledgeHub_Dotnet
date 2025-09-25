@@ -18,5 +18,6 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
 
         Task<List<Article>> BrowseAsync(int categoryId, string tag);
         Task<List<Article>> ReviewAsync(int? categoryId);
+        Task<List<Article>> GetRejectedArticlesAsync();
     }
 }

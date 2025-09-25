@@ -60,6 +60,19 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             }).ToList();
         }
 
+        public async Task<List<PendingArticleDto>> GetRejectedArticlesAsync()
+        {
+            var articles = await _articleRepo.GetRejectedArticlesAsync();
+            return articles.Select(a => new PendingArticleDto
+            {
+                ArticleIds = new[] { a.Id },
+                Title = a.Title,
+                Url = a.Url,
+                CategoryName = a.Category?.CategoryName ?? "Uncategorized",
+                DateSubmitted = a.DateSubmitted
+            }).ToList();
+        }
+
         public async Task SubmitArticleAsync(SubmitUrlDTO dto)
         {
             // Read the user's name from the token's "Name" claim

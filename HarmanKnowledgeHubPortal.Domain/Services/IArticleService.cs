@@ -12,5 +12,6 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         Task SubmitArticleAsync(SubmitUrlDTO dto);
         // Task<List<Article>> BrowseArticlesAsync();
         Task<List<ArticleDto>> BrowseArticlesAsync();
+        Task<List<PendingArticleDto>> GetRejectedArticlesAsync();
     }
 }

@@ -105,7 +105,11 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
             }
         }
 
-
-
+        [HttpGet("rejected")]
+        public async Task<IActionResult> GetRejectedArticlesAsync()
+        {
+            var articles = await _articleService.GetRejectedArticlesAsync();
+            return Ok(articles);
+        }
     }
 }

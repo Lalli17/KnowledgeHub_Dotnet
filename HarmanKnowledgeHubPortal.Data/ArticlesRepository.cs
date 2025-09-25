@@ -95,5 +95,13 @@ namespace HarmanKnowledgeHubPortal.Data
                 .Where(a => a.Status == ArticleStatus.PENDING)
                 .ToListAsync();
         }
+
+        public async Task<List<Article>> GetRejectedArticlesAsync()
+        {
+            return await _context.Articles
+                .Include(a => a.Category)
+                .Where(a => a.Status == ArticleStatus.REJECTED)
+                .ToListAsync();
+        }
     }
 }
