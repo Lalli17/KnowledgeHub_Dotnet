@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HarmanKnowledgeHubPortal.Domain.DTOs;
 
-namespace HarmanKnowledgeHubPortal.Domain.DTO
+public class BrowseUrlDTO
 {
-    public class BrowseUrlDTO
-    {
-        public string Title { get; set; }
-        public string Url { get; set; }
-        public string Description { get; set; }      //review,reports
-        public string PostedBy { get; set; }        // e.g., User Name or Email
-        public string CategoryName { get; set; }    // e.g., "Programming", "Design"
-    }
+    public string Title { get; set; }
+    public string Url { get; set; }
+    public string Description { get; set; }
+    public string PostedBy { get; set; }
+    public string CategoryName { get; set; }
+
+    // New fields for ratings
+    public double AverageRating { get; set; } = 0.0;
+    public int RatingsCount { get; set; } = 0;
+    public List<RatingDto> Reviews { get; set; } = new(); // optional, for full reviews
 }

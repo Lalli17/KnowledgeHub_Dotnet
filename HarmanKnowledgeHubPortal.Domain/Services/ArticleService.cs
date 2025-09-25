@@ -13,9 +13,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         private readonly IArticlesRepository _articleRepo;
         private readonly INotificationService _notificationService;
 
-        public ArticleService(
-            IArticlesRepository articleRepo,
-            INotificationService notificationService)
+        public ArticleService(IArticlesRepository articleRepo, INotificationService notificationService)
         {
             _articleRepo = articleRepo;
             _notificationService = notificationService;
@@ -30,14 +28,10 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             if (action == "approve")
             {
                 await _articleRepo.ApproveAsync(dto.ArticleIds);
-                // The line below is now safely disabled
-                // await _notificationService.SendEmailAsync("publisher@example.com", "Article Approved", "Your article has been approved.");
             }
             else if (action == "reject")
             {
                 await _articleRepo.RejectAsync(dto.ArticleIds);
-                // The line below is now safely disabled
-                // await _notificationService.SendEmailAsync("publisher@example.com", "Article Rejected", "Your article has been rejected.");
             }
             else
             {
@@ -71,13 +65,32 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             };
 
             await _articleRepo.SubmitAsync(article);
-            // This line is already safely disabled from our previous fix
-            // await _notificationService.SendEmailAsync("admin@example.com", "New Article Submitted", $"A new article '{article.Title}' has been submitted.");
         }
 
-        public async Task<List<Article>> BrowseArticlesAsync()
+        public async Task<List<ArticleDto>> BrowseArticlesAsync()
         {
-            return await _articleRepo.BrowseAsync(0, "");
+            // Use repository method only
+            var articles = await _articleRepo.BrowseAsync();
+
+            return articles.Select(a => new ArticleDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Url = a.Url,
+                Description = a.Description,
+                PostedBy = a.PostedBy,
+                CategoryName = a.Category?.CategoryName ?? "Uncategorized",
+                AverageRating = a.Ratings.Any() ? a.Ratings.Average(r => r.RatingNumber) : 0,
+                RatingsCount = a.Ratings.Count,
+                Reviews = a.Ratings.Select(r => new ReviewDto
+                {
+                    Id = r.Id,
+                    RatingNumber = r.RatingNumber,
+                    Review = r.Review,
+                    Name = r.User?.Name ?? "Unknown",
+                    RatedAt = r.RatedAt
+                }).ToList()
+            }).ToList();
         }
     }
 }

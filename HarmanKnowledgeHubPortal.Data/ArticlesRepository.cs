@@ -30,6 +30,16 @@ namespace HarmanKnowledgeHubPortal.Data
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Article>> BrowseAsync()
+        {
+            return await _context.Articles
+                .Include(a => a.Category)
+                .Include(a => a.Ratings)
+                    .ThenInclude(r => r.User)
+                .Where(a => a.Status == ArticleStatus.APPROVED)
+                .ToListAsync();
+        }
+
         public async Task ApproveAsync(List<int> articleIds)
         {
             var articles = await _context.Articles

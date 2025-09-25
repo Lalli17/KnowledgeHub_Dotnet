@@ -11,6 +11,8 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
     {       
         Task SubmitAsync(Article article);
         Task UpdateAsync(Article article);
+        Task<List<Article>> BrowseAsync();
+
         Task RejectAsync(List<int> articleIds);
         Task ApproveAsync(List<int> articleIds);
 
