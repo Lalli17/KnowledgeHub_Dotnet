@@ -13,5 +13,6 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
         Task<User?> GetByIdAsync(int id);
         Task AddAsync(User user);
         Task<bool> ExistsAsync(string email);
+        Task<List<User>> GetAllAsync();
     }
 }
