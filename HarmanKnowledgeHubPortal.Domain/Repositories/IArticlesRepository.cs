@@ -17,7 +17,6 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
         Task ApproveAsync(List<int> articleIds);
 
         Task<List<Article>> BrowseAsync(int categoryId, string tag);
-        Task<List<Article>> ReviewAsync(int categoryId);
-
+        Task<List<Article>> ReviewAsync(int? categoryId);
     }
 }

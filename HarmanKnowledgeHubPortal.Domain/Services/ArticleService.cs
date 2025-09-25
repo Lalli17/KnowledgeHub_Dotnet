@@ -1,9 +1,11 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
 using HarmanKnowledgeHubPortal.Domain.Entities;
 using HarmanKnowledgeHubPortal.Domain.Repositories;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace HarmanKnowledgeHubPortal.Domain.Services
@@ -12,11 +14,17 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
     {
         private readonly IArticlesRepository _articleRepo;
         private readonly INotificationService _notificationService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ArticleService(IArticlesRepository articleRepo, INotificationService notificationService)
+
+        public ArticleService(
+            IArticlesRepository articleRepo,
+            INotificationService notificationService,
+            IHttpContextAccessor httpContextAccessor)
         {
             _articleRepo = articleRepo;
             _notificationService = notificationService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task ReviewArticlesAsync(ReviewArticleDto dto)
@@ -39,19 +47,29 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             }
         }
 
-        public async Task<List<ReviewArticleDto>> GetPendingArticlesAsync(int categoryId)
+        public async Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId)
         {
-            var articles = await _articleRepo.ReviewAsync(categoryId);
-            return articles.Select(article => new ReviewArticleDto
+            var articles = await _articleRepo.ReviewAsync(null);
+            return articles.Select(a => new PendingArticleDto
             {
-                ArticleIds = new List<int> { article.Id },
-                Action = "Pending"
+                ArticleIds = new[] { a.Id },
+                Title = a.Title,
+                Url = a.Url,
+                CategoryName = a.Category?.CategoryName ?? "Uncategorized",
+                DateSubmitted = a.DateSubmitted
             }).ToList();
         }
 
         public async Task SubmitArticleAsync(SubmitUrlDTO dto)
         {
-            var userName = "User"; // Placeholder
+            // Read the user's name from the token's "Name" claim
+            var userName = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                // This will prevent non-logged-in users from submitting
+                throw new Exception("User is not authenticated or token is missing name claim.");
+            }
 
             var article = new Article
             {
@@ -59,7 +77,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
                 Url = dto.Url,
                 Description = dto.Description,
                 CategoryId = dto.CategoryId,
-                PostedBy = userName,
+                PostedBy = userName, // Use the real user name from the token
                 DateSubmitted = DateTime.UtcNow,
                 Status = ArticleStatus.PENDING
             };

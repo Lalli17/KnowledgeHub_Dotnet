@@ -1,7 +1,10 @@
 ﻿using HarmanKnowledgeHubPortal.Data;
 using HarmanKnowledgeHubPortal.Domain.Repositories;
 using HarmanKnowledgeHubPortal.Domain.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace HarmanKnowledgeHubPortal
 {
@@ -15,6 +18,34 @@ namespace HarmanKnowledgeHubPortal
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // Configure JWT Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
+            // Add HttpContextAccessor to read user claims from the token
+            builder.Services.AddHttpContextAccessor();
+
+            // Add CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigins", policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
 
             // Register all application services and repositories
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
@@ -58,7 +89,14 @@ namespace HarmanKnowledgeHubPortal
 
             app.UseCors("AllowAll");
             app.UseHttpsRedirection();
+
+            // Apply CORS before auth & endpoints
+            app.UseCors("AllowSpecificOrigins");
+
+            // IMPORTANT: Add Authentication BEFORE Authorization
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
             app.Run();
         }
