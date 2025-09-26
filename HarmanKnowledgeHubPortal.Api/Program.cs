@@ -14,70 +14,70 @@ namespace HarmanKnowledgeHubPortal
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add controllers & Swagger
+            // -------------------- Add Services --------------------
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // Configure JWT Authentication
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"])),
-                        ValidateIssuer = false,
-                        ValidateAudience = false
-                    };
-                });
-
-            // Add HttpContextAccessor to read user claims from the token
+            // Add HttpContextAccessor to read user claims
             builder.Services.AddHttpContextAccessor();
 
-            // Add CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowSpecificOrigins", policy =>
+            // -------------------- DbContext --------------------
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(connectionString, sqlOptions =>
                 {
-                    policy
-                        .AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                });
-            });
+                    sqlOptions.EnableRetryOnFailure(); // Handles transient Azure SQL issues
+                }));
 
-            // Register all application services and repositories
+            // -------------------- Repositories --------------------
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
             builder.Services.AddScoped<IArticlesRepository, ArticlesRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
+            // -------------------- Services --------------------
             builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<IArticleService, ArticleService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
 
-            // Register DbContext with a connection string
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
-
-            // Enabling CORS
+            // -------------------- CORS --------------------
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
                 });
             });
 
+            // -------------------- JWT Authentication --------------------
+            var jwtKey = builder.Configuration["JwtKey"];
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                throw new Exception("JWT key is missing in configuration! Please add it to appsettings.json or environment variables.");
+            }
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
+            // -------------------- Build App --------------------
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // -------------------- Middleware --------------------
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -87,17 +87,16 @@ namespace HarmanKnowledgeHubPortal
                 });
             }
 
-            app.UseCors("AllowAll");
             app.UseHttpsRedirection();
 
-            // Apply CORS before auth & endpoints
-            app.UseCors("AllowSpecificOrigins");
+            // CORS before Authentication & Authorization
+            app.UseCors("AllowAll");
 
-            // IMPORTANT: Add Authentication BEFORE Authorization
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
+
             app.Run();
         }
     }

@@ -1,9 +1,10 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
 using HarmanKnowledgeHubPortal.Domain.DTOs;
 using HarmanKnowledgeHubPortal.Domain.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace HarmanKnowledgeHubPortal.Api.Controllers
@@ -13,10 +14,12 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
     public class ArticleReviewController : ControllerBase
     {
         private readonly IArticleService _articleService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ArticleReviewController(IArticleService articleService)
+        public ArticleReviewController(IArticleService articleService, IHttpContextAccessor httpContextAccessor)
         {
             _articleService = articleService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost("review")]
@@ -43,8 +46,7 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
         [HttpPost("submit")]
         public async Task<IActionResult> SubmitArticle([FromBody] SubmitUrlDTO dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try
             {
@@ -56,40 +58,6 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
-        //[HttpGet("browse")]
-        //public async Task<IActionResult> BrowseArticles()
-        //{
-        //    try
-        //    {
-        //        var approvedArticles = await _articleService.BrowseArticlesAsync();
-
-        //        var result = approvedArticles.Select(u => new BrowseUrlDTO
-        //        {
-        //            Title = u.Title,
-        //            Url = u.Url,
-        //            Description = u.Description,
-        //            PostedBy = u.PostedBy,
-        //            CategoryName = u.Category?.CategoryName ?? "Uncategorized",
-        //            AverageRating = u.Ratings.Any() ? u.Ratings.Average(r => r.RatingNumber) : 0.0,
-        //            RatingsCount = u.Ratings.Count,
-        //            Reviews = u.Ratings.Select(r => new RatingDto
-        //            {
-        //                Id = r.Id,
-        //                RatingNumber = r.RatingNumber,
-        //                Review = r.Review,
-        //                UserName = r.User.Name,
-        //                RatedAt = r.RatedAt
-        //            }).ToList()
-        //        });
-
-        //        return Ok(result);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { message = ex.Message });
-        //    }
-        //}
 
         [HttpGet("browse")]
         public async Task<IActionResult> BrowseArticles()
@@ -110,6 +78,40 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
         {
             var articles = await _articleService.GetRejectedArticlesAsync();
             return Ok(articles);
+        }
+
+        [HttpPost("rate/{id}")]
+        public async Task<IActionResult> RateArticle(int id, [FromBody] RatingRequestDto dto)
+        {
+            var userName = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized("User not authenticated.");
+
+            try
+            {
+                await _articleService.AddRatingAsync(id, dto.Rating, userName);
+                return Ok(new { message = "Rating submitted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("review/{id}")]
+        public async Task<IActionResult> ReviewArticle(int id, [FromBody] ReviewRequestDto dto)
+        {
+            var userName = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
+            if (string.IsNullOrEmpty(userName)) return Unauthorized("User not authenticated.");
+
+            try
+            {
+                await _articleService.AddReviewAsync(id, dto.Review, userName);
+                return Ok(new { message = "Review submitted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }
