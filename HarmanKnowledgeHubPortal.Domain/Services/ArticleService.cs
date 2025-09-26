@@ -70,6 +70,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
                 Description = dto.Description,
                 CategoryId = dto.CategoryId,
                 PostedBy = userName,
+                AuthorEmail = dto.AuthorEmail, // <-- Use the email from DTO
                 Status = ArticleStatus.PENDING,
                 DateSubmitted = DateTime.UtcNow
             });
