@@ -1,5 +1,4 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
-using HarmanKnowledgeHubPortal.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,8 +9,10 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         Task ReviewArticlesAsync(ReviewArticleDto dto);
         Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId);
         Task SubmitArticleAsync(SubmitUrlDTO dto);
-        // Task<List<Article>> BrowseArticlesAsync();
         Task<List<ArticleDto>> BrowseArticlesAsync();
         Task<List<PendingArticleDto>> GetRejectedArticlesAsync();
+
+        Task AddRatingAsync(int articleId, int rating, string userName);
+        Task AddReviewAsync(int articleId, string review, string userName);
     }
 }

@@ -1,11 +1,11 @@
-﻿using HarmanKnowledgeHubPortal.Domain.Entities;
-using HarmanKnowledgeHubPortal.Domain.Repositories;
+﻿using HarmanKnowledgeHubPortal.Data;
+using HarmanKnowledgeHubPortal.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HarmanKnowledgeHubPortal.Data
+namespace HarmanKnowledgeHubPortal.Domain.Repositories
 {
     public class ArticlesRepository : IArticlesRepository
     {
@@ -18,15 +18,7 @@ namespace HarmanKnowledgeHubPortal.Data
 
         public async Task SubmitAsync(Article article)
         {
-            article.Status = ArticleStatus.PENDING;
-            article.DateSubmitted = System.DateTime.UtcNow;
-            await _context.Articles.AddAsync(article);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Article article)
-        {
-            _context.Articles.Update(article);
+            _context.Articles.Add(article);
             await _context.SaveChangesAsync();
         }
 
@@ -35,65 +27,21 @@ namespace HarmanKnowledgeHubPortal.Data
             return await _context.Articles
                 .Include(a => a.Category)
                 .Include(a => a.Ratings)
-                    .ThenInclude(r => r.User)
+                .ThenInclude(r => r.User)
                 .Where(a => a.Status == ArticleStatus.APPROVED)
                 .ToListAsync();
         }
 
-        public async Task ApproveAsync(List<int> articleIds)
-        {
-            var articles = await _context.Articles
-                .Where(a => articleIds.Contains(a.Id))
-                .ToListAsync();
-
-            foreach (var article in articles)
-                article.Status = ArticleStatus.APPROVED;
-
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task RejectAsync(List<int> articleIds)
-        {
-            var articles = await _context.Articles
-                .Where(a => articleIds.Contains(a.Id))
-                .ToListAsync();
-
-            foreach (var article in articles)
-                article.Status = ArticleStatus.REJECTED;
-
-            await _context.SaveChangesAsync();
-        }
-
-        // --- THIS IS THE CORRECTED METHOD ---
-        public async Task<List<Article>> BrowseAsync(int categoryId, string tag)
-        {
-            // 1. Start with a base query for all approved articles
-            var query = _context.Articles
-                .Include(a => a.Category)
-                .Where(a => a.Status == ArticleStatus.APPROVED);
-
-            // 2. If a valid categoryId is provided, add that filter
-            if (categoryId > 0)
-            {
-                query = query.Where(a => a.Category.Id == categoryId);
-            }
-
-            // 3. If a real tag is provided, add that filter
-            if (!string.IsNullOrEmpty(tag))
-            {
-                query = query.Where(a => a.ArticleTags.Any(t => t.TagName == tag));
-            }
-
-            // 4. Execute the final, correct query
-            return await query.ToListAsync();
-        }
-
         public async Task<List<Article>> ReviewAsync(int? categoryId)
         {
-            return await _context.Articles
+            var query = _context.Articles
                 .Include(a => a.Category)
-                .Where(a => a.Status == ArticleStatus.PENDING)
-                .ToListAsync();
+                .Where(a => a.Status == ArticleStatus.PENDING);
+
+            if (categoryId.HasValue)
+                query = query.Where(a => a.CategoryId == categoryId.Value);
+
+            return await query.ToListAsync();
         }
 
         public async Task<List<Article>> GetRejectedArticlesAsync()
@@ -102,6 +50,54 @@ namespace HarmanKnowledgeHubPortal.Data
                 .Include(a => a.Category)
                 .Where(a => a.Status == ArticleStatus.REJECTED)
                 .ToListAsync();
+        }
+
+        public async Task ApproveAsync(IEnumerable<int> articleIds)
+        {
+            var articles = await _context.Articles.Where(a => articleIds.Contains(a.Id)).ToListAsync();
+            foreach (var a in articles) a.Status = ArticleStatus.APPROVED;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RejectAsync(IEnumerable<int> articleIds)
+        {
+            var articles = await _context.Articles.Where(a => articleIds.Contains(a.Id)).ToListAsync();
+            foreach (var a in articles) a.Status = ArticleStatus.REJECTED;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddRatingAsync(int articleId, int rating, string userName)
+        {
+            var article = await _context.Articles.FindAsync(articleId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Name == userName);
+            if (article == null || user == null) return;
+
+            _context.Ratings.Add(new Rating
+            {
+                ArticleId = articleId,
+                RatingNumber = rating,
+                UserId = user.Id,
+                User = user
+            });
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddReviewAsync(int articleId, string review, string userName)
+        {
+            var article = await _context.Articles.FindAsync(articleId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Name == userName);
+            if (article == null || user == null) return;
+
+            _context.Ratings.Add(new Rating
+            {
+                ArticleId = articleId,
+                Review = review,
+                UserId = user.Id,
+                User = user
+            });
+
+            await _context.SaveChangesAsync();
         }
     }
 }
