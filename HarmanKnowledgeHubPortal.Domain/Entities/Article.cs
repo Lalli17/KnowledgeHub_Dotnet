@@ -19,4 +19,5 @@ public class Article
 
     public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 
+    public string AuthorEmail { get; set; } // <-- Add this line
 }

@@ -33,14 +33,15 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
 
         public async Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId)
         {
-            var articles = await _articleRepo.ReviewAsync(categoryId);
+            var articles = await _articleRepo.ReviewAsync(null);
             return articles.Select(a => new PendingArticleDto
             {
                 ArticleIds = new[] { a.Id },
                 Title = a.Title,
                 Url = a.Url,
                 CategoryName = a.Category?.CategoryName ?? "Uncategorized",
-                DateSubmitted = a.DateSubmitted
+                DateSubmitted = a.DateSubmitted,
+                AuthorEmail = a.AuthorEmail // Ensure Article entity has this property
             }).ToList();
         }
 
