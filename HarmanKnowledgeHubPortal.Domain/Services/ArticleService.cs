@@ -40,8 +40,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
                 Title = a.Title,
                 Url = a.Url,
                 CategoryName = a.Category?.CategoryName ?? "Uncategorized",
-                DateSubmitted = a.DateSubmitted,
-                AuthorEmail = a.AuthorEmail // Ensure Article entity has this property
+                DateSubmitted = a.DateSubmitted
             }).ToList();
         }
 
@@ -70,7 +69,6 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
                 Description = dto.Description,
                 CategoryId = dto.CategoryId,
                 PostedBy = userName,
-                AuthorEmail = dto.AuthorEmail, // <-- Use the email from DTO
                 Status = ArticleStatus.PENDING,
                 DateSubmitted = DateTime.UtcNow
             });

@@ -18,6 +18,4 @@ public class Article
     public ArticleStatus Status { get; set; } // enum Pending/Approved/Rejected
 
     public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
-
-    public string AuthorEmail { get; set; } // <-- Add this line
 }

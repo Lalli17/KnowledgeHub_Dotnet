@@ -10,6 +10,5 @@ namespace HarmanKnowledgeHubPortal.Domain.DTO
         public string Url { get; set; }
         public string CategoryName { get; set; }
         public DateTime DateSubmitted { get; set; }
-        public string AuthorEmail { get; set; } // Added property
     }
 }
