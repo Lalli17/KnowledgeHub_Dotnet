@@ -41,8 +41,15 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers.CategoryController
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await _categoryService.CreateCategoryAsync(dto);
-            return StatusCode(201, "Category created successfully.");
+            try
+            {
+                await _categoryService.CreateCategoryAsync(dto);
+                return StatusCode(201, "Category created successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -66,5 +73,18 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers.CategoryController
             await _categoryService.SoftDeleteCategoryAsync(id);
             return NoContent();
         }
+
+        [HttpGet("exists")]
+        public async Task<IActionResult> Exists([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Category name is required.");
+
+            var exists = await _categoryService.CategoryExistsAsync(name);
+            return Ok(exists); // returns true or false
+        }
+
     }
+
 }
+

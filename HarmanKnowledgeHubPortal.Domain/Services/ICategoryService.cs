@@ -9,5 +9,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         Task<CategoryListDTO> GetCategoryByIdAsync(int id);
         Task UpdateCategoryAsync(int id, CategoryCreateDTO dto);
         Task SoftDeleteCategoryAsync(int id);
+        Task<bool> CategoryExistsAsync(string name);
+
     }
 }
