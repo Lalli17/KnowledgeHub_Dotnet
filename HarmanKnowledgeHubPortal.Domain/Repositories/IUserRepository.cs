@@ -1,8 +1,5 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.Entities;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HarmanKnowledgeHubPortal.Domain.Repositories
@@ -14,5 +11,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
         Task AddAsync(User user);
         Task<bool> ExistsAsync(string email);
         Task<List<User>> GetAllAsync();
+        Task UpdateAsync(User user);
+        Task DeleteAsync(int id);
     }
 }

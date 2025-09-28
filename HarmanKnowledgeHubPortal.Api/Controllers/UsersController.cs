@@ -36,5 +36,45 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
 
             return Ok(userDtos);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Roles = user.Roles.Select(r => r.Name).ToList()
+            };
+            return Ok(userDto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+
+            user.Name = dto.Name;
+            user.Email = dto.Email;
+            // Optionally update roles if needed
+
+            await _userRepository.UpdateAsync(user);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
+
+            await _userRepository.DeleteAsync(id);
+            return NoContent();
+        }
     }
 }
