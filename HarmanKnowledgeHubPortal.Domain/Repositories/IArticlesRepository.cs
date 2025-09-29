@@ -16,5 +16,9 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
 
         Task AddRatingAsync(int articleId, int rating, string userName);
         Task AddReviewAsync(int articleId, string review, string userName);
+
+        // Admin: Get & Delete review
+        Task<Rating> GetReviewByIdAsync(int reviewId);
+        Task DeleteReviewAsync(int reviewId);
     }
 }
