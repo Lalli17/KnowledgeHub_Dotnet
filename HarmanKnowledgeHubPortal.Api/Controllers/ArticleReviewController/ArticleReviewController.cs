@@ -4,6 +4,7 @@ using HarmanKnowledgeHubPortal.Domain.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -22,6 +23,9 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
+        // ----------------------------
+        // Admin approve/reject articles
+        // ----------------------------
         [HttpPost("review")]
         public async Task<IActionResult> ReviewArticlesAsync([FromBody] ReviewArticleDto dto)
         {
@@ -40,6 +44,13 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
         public async Task<IActionResult> GetPendingArticlesAsync()
         {
             var articles = await _articleService.GetPendingArticlesAsync(null);
+            return Ok(articles);
+        }
+
+        [HttpGet("rejected")]
+        public async Task<IActionResult> GetRejectedArticlesAsync()
+        {
+            var articles = await _articleService.GetRejectedArticlesAsync();
             return Ok(articles);
         }
 
@@ -73,13 +84,9 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
             }
         }
 
-        [HttpGet("rejected")]
-        public async Task<IActionResult> GetRejectedArticlesAsync()
-        {
-            var articles = await _articleService.GetRejectedArticlesAsync();
-            return Ok(articles);
-        }
-
+        // ----------------------------
+        // Rate an article
+        // ----------------------------
         [HttpPost("rate/{id}")]
         public async Task<IActionResult> RateArticle(int id, [FromBody] RatingRequestDto dto)
         {
@@ -97,6 +104,9 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
             }
         }
 
+        // ----------------------------
+        // Add a review
+        // ----------------------------
         [HttpPost("review/{id}")]
         public async Task<IActionResult> ReviewArticle(int id, [FromBody] ReviewRequestDto dto)
         {
@@ -107,6 +117,29 @@ namespace HarmanKnowledgeHubPortal.Api.Controllers
             {
                 await _articleService.AddReviewAsync(id, dto.Review, userName);
                 return Ok(new { message = "Review submitted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // ----------------------------
+        // Delete a review (Admin only)
+        // ----------------------------
+        [HttpDelete("review/{id}")]
+        public async Task<IActionResult> DeleteReview(int id)
+        {
+            var userRoles = _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role);
+            if (userRoles == null || !userRoles.Any(r => r.Value == "Admin"))
+            {
+                return Forbid("Only admin users can delete reviews.");
+            }
+
+            try
+            {
+                await _articleService.DeleteReviewAsync(id);
+                return Ok(new { message = "Review deleted successfully." });
             }
             catch (Exception ex)
             {
