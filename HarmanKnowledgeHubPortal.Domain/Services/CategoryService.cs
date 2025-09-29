@@ -1,6 +1,7 @@
 ﻿using HarmanKnowledgeHubPortal.Domain.DTO;
 using HarmanKnowledgeHubPortal.Domain.Entities;
 using HarmanKnowledgeHubPortal.Domain.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,11 +19,17 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
 
         public async Task CreateCategoryAsync(CategoryCreateDTO dto)
         {
+            var existingCategory = await _categoryRepository.GetByNameAsync(dto.CategoryName);
+            if (existingCategory != null)
+            {
+                throw new Exception("Category already exists.");
+            }
+
             var category = new Category
             {
                 CategoryName = dto.CategoryName,
                 CategoryDescription = dto.CategoryDescription,
-                DateTimeCreate = System.DateTime.UtcNow,
+                DateTimeCreate = DateTime.UtcNow,
                 IsDeleted = false
             };
 
@@ -37,8 +44,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             {
                 Id = c.Id,
                 CategoryName = c.CategoryName,
-                CategoryDescription = c.CategoryDescription,
-                //DateTimeCreate = c.DateTimeCreate
+                CategoryDescription = c.CategoryDescription
             }).ToList();
         }
 
@@ -53,8 +59,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             {
                 Id = category.Id,
                 CategoryName = category.CategoryName,
-                CategoryDescription = category.CategoryDescription,
-                //DateTimeCreate = category.DateTimeCreate
+                CategoryDescription = category.CategoryDescription
             };
         }
 
@@ -73,6 +78,13 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
         public async Task SoftDeleteCategoryAsync(int id)
         {
             await _categoryRepository.SoftDeleteAsync(id);
+        }
+
+        // ✅ New method to check if a category exists by name
+        public async Task<bool> CategoryExistsAsync(string name)
+        {
+            var category = await _categoryRepository.GetByNameAsync(name);
+            return category != null && !category.IsDeleted;
         }
     }
 }

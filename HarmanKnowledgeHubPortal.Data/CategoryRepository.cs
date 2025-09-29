@@ -35,6 +35,12 @@ namespace HarmanKnowledgeHubPortal.Data
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
         }
 
+        public async Task<Category> GetByNameAsync(string name)
+        {
+            return await _context.Categories
+                .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == name.ToLower() && !c.IsDeleted);
+        }
+
         public async Task UpdateAsync(Category category)
         {
             _context.Categories.Update(category);
@@ -51,4 +57,6 @@ namespace HarmanKnowledgeHubPortal.Data
             }
         }
     }
+
 }
+
