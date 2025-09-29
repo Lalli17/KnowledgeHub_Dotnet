@@ -16,6 +16,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
             _context = context;
         }
 
+        // ---------- Articles ----------
         public async Task SubmitAsync(Article article)
         {
             _context.Articles.Add(article);
@@ -66,6 +67,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
             await _context.SaveChangesAsync();
         }
 
+        // ---------- Ratings & Reviews ----------
         public async Task AddRatingAsync(int articleId, int rating, string userName)
         {
             var article = await _context.Articles.FindAsync(articleId);
@@ -97,6 +99,30 @@ namespace HarmanKnowledgeHubPortal.Domain.Repositories
                 User = user
             });
 
+            await _context.SaveChangesAsync();
+        }
+
+        // ---------- Admin: Get & Delete review ----------
+        public async Task<Rating> GetReviewByIdAsync(int reviewId)
+        {
+            var review = await _context.Ratings
+                .Include(r => r.User)
+                .Include(r => r.Article)
+                .FirstOrDefaultAsync(r => r.Id == reviewId);
+
+            if (review == null)
+                throw new KeyNotFoundException("Review not found");
+
+            return review;
+        }
+
+        public async Task DeleteReviewAsync(int reviewId)
+        {
+            var review = await _context.Ratings.FindAsync(reviewId);
+            if (review == null)
+                throw new KeyNotFoundException("Review not found");
+
+            _context.Ratings.Remove(review);
             await _context.SaveChangesAsync();
         }
     }

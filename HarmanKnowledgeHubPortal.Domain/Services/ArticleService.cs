@@ -21,6 +21,9 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        // ----------------------------
+        // Admin approve/reject articles
+        // ----------------------------
         public async Task ReviewArticlesAsync(ReviewArticleDto dto)
         {
             if (dto.Action?.ToLower() == "approve")
@@ -33,7 +36,7 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
 
         public async Task<List<PendingArticleDto>> GetPendingArticlesAsync(int? categoryId)
         {
-            var articles = await _articleRepo.ReviewAsync(null);
+            var articles = await _articleRepo.ReviewAsync(categoryId);
             return articles.Select(a => new PendingArticleDto
             {
                 ArticleIds = new[] { a.Id },
@@ -57,6 +60,9 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             }).ToList();
         }
 
+        // ----------------------------
+        // User submits a new article
+        // ----------------------------
         public async Task SubmitArticleAsync(SubmitUrlDTO dto)
         {
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
@@ -74,6 +80,9 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
             });
         }
 
+        // ----------------------------
+        // Browse articles with ratings & reviews
+        // ----------------------------
         public async Task<List<ArticleDto>> BrowseArticlesAsync()
         {
             var articles = await _articleRepo.BrowseAsync();
@@ -87,25 +96,51 @@ namespace HarmanKnowledgeHubPortal.Domain.Services
                 CategoryName = a.Category?.CategoryName ?? "Uncategorized",
                 AverageRating = a.Ratings.Any() ? a.Ratings.Average(r => r.RatingNumber) : 0,
                 RatingsCount = a.Ratings.Count,
-                Reviews = a.Ratings.Select(r => new ReviewDto
-                {
-                    Id = r.Id,
-                    RatingNumber = r.RatingNumber,
-                    Review = r.Review,
-                    Name = r.User?.Name ?? "Unknown",
-                    RatedAt = r.RatedAt
-                }).ToList()
+                Reviews = a.Ratings
+                    .Where(r => !string.IsNullOrEmpty(r.Review))
+                    .Select(r => new ReviewDto
+                    {
+                        Id = r.Id,
+                        RatingNumber = r.RatingNumber,
+                        Review = r.Review,
+                        Name = r.User?.Name ?? "Unknown",
+                        RatedAt = r.RatedAt
+                    }).ToList()
             }).ToList();
         }
 
+        // ----------------------------
+        // Add a rating
+        // ----------------------------
         public async Task AddRatingAsync(int articleId, int rating, string userName)
         {
             await _articleRepo.AddRatingAsync(articleId, rating, userName);
         }
 
+        // ----------------------------
+        // Add a review
+        // ----------------------------
         public async Task AddReviewAsync(int articleId, string review, string userName)
         {
             await _articleRepo.AddReviewAsync(articleId, review, userName);
+        }
+
+        // ----------------------------
+        // Delete a review (Admin only)
+        // ----------------------------
+        public async Task DeleteReviewAsync(int reviewId)
+        {
+            // Check if current user is Admin
+            var userRoles = _httpContextAccessor.HttpContext?.User?.FindAll(ClaimTypes.Role);
+            if (userRoles == null || !userRoles.Any(r => r.Value == "Admin"))
+                throw new UnauthorizedAccessException("Only admin users can delete reviews.");
+
+            // Delete review from repository
+            var review = await _articleRepo.GetReviewByIdAsync(reviewId);
+            if (review == null)
+                throw new Exception("Review not found.");
+
+            await _articleRepo.DeleteReviewAsync(reviewId);
         }
     }
 }
